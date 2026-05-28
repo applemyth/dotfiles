@@ -6,8 +6,11 @@ a Nix-managed Neovim setup.
 Apply the current macOS profile:
 
 ```sh
-home-manager switch --flake .#ark@macbook
+home-manager switch --flake .#hershybar@macbook
 ```
+
+Standalone Home Manager profile names are generated as
+`<username>@<hostname>` from the `hosts` map in `flake.nix`.
 
 Apply the full macOS system profile with nix-darwin:
 
@@ -25,15 +28,21 @@ The current canonical location is:
 Then let Home Manager provide the active `nvim`. Keeping the source repo at
 `~/.config/nvim` leaves unmanaged Lua files on Neovim's default runtime path.
 
-Add another machine by editing `profiles` in `flake.nix`:
+Add or change a machine by editing `hosts` in `flake.nix`:
 
 ```nix
-"alex@linuxbox" = {
+linuxbox = {
   username = "alex";
   system = "x86_64-linux";
-  homeDirectory = "/home/alex";
 };
 ```
+
+The home directory is derived from the platform by default:
+
+- Darwin systems use `/Users/<username>`.
+- Linux systems use `/home/<username>`.
+
+Set `homeDirectory` only when a machine uses a non-standard path.
 
 Then apply it:
 

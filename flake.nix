@@ -17,10 +17,26 @@
 
   outputs = { self, nixpkgs, nix-darwin, home-manager, ... }:
     let
-      mkHome = { username, system, homeDirectory, extraModules ? [ ] }:
+      lib = nixpkgs.lib;
+
+      homeDirectoryFor = system: username:
+        if lib.hasSuffix "-darwin" system
+        then "/Users/${username}"
+        else "/home/${username}";
+
+      normalizeProfile = profile:
+        profile // {
+          homeDirectory =
+            profile.homeDirectory or (homeDirectoryFor profile.system profile.username);
+        };
+
+      mkHome = profileArg:
+        let
+          profile = normalizeProfile profileArg;
+        in
         home-manager.lib.homeManagerConfiguration {
           pkgs = import nixpkgs {
-            inherit system;
+            inherit (profile) system;
             config.allowUnfree = true;
           };
 
@@ -28,72 +44,73 @@
             ./nix/home
             ./nix/modules/nvim.nix
             {
-              home.username = username;
-              home.homeDirectory = homeDirectory;
+              home.username = profile.username;
+              home.homeDirectory = profile.homeDirectory;
             }
-          ] ++ extraModules;
+          ] ++ (profile.extraModules or [ ]);
         };
 
-      mkDarwin = { hostname, username, system, homeDirectory, extraModules ? [ ] }:
+      mkDarwin = hostname: profileArg:
+        let
+          profile = normalizeProfile profileArg;
+        in
         nix-darwin.lib.darwinSystem {
           specialArgs = {
-            inherit hostname username homeDirectory;
+            inherit hostname;
+            inherit (profile) username homeDirectory;
           };
 
           modules = [
             ./nix/darwin
             home-manager.darwinModules.home-manager
             {
-              nixpkgs.hostPlatform = system;
+              nixpkgs.hostPlatform = profile.system;
 
-              users.users.${username}.home = homeDirectory;
+              users.users.${profile.username}.home = profile.homeDirectory;
 
               home-manager.useGlobalPkgs = true;
               home-manager.useUserPackages = true;
-              home-manager.users.${username} = {
+              home-manager.users.${profile.username} = {
                 imports = [
                   ./nix/home
                   ./nix/modules/nvim.nix
                 ];
 
-                home.username = username;
-                home.homeDirectory = homeDirectory;
+                home.username = profile.username;
+                home.homeDirectory = profile.homeDirectory;
               };
             }
-          ] ++ extraModules;
+          ] ++ (profile.extraModules or [ ]);
         };
 
-      profiles = {
-        "ark@macbook" = {
-          username = "ark";
+      hosts = {
+        macbook = {
+          username = "hershybar";
           system = "aarch64-darwin";
-          homeDirectory = "/Users/ark";
         };
 
         # Example Linux profile:
         #
-        # "alex@linuxbox" = {
+        # linuxbox = {
         #   username = "alex";
         #   system = "x86_64-linux";
-        #   homeDirectory = "/home/alex";
         # };
       };
 
-      darwinProfiles = {
-        macbook = {
-          hostname = "macbook";
-          username = "ark";
-          system = "aarch64-darwin";
-          homeDirectory = "/Users/ark";
-        };
-      };
+      homeProfiles = lib.mapAttrs'
+        (hostname: profile:
+          lib.nameValuePair "${profile.username}@${hostname}" profile)
+        hosts;
+
+      darwinProfiles =
+        lib.filterAttrs (_hostname: profile: lib.hasSuffix "-darwin" profile.system) hosts;
     in
     {
       homeConfigurations =
-        builtins.mapAttrs (_name: profile: mkHome profile) profiles;
+        builtins.mapAttrs (_name: profile: mkHome profile) homeProfiles;
 
       darwinConfigurations =
-        builtins.mapAttrs (_name: profile: mkDarwin profile) darwinProfiles;
+        builtins.mapAttrs (hostname: profile: mkDarwin hostname profile) darwinProfiles;
 
       homeManagerModules = {
         terminal = ./nix/home;

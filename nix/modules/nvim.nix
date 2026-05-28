@@ -5,6 +5,11 @@ let
     pname = "ark-nvim-config";
     version = "0.1.0";
     src = ../..;
+    nvimSkipModules = [
+      "init"
+      "ark-nvim"
+      "ark-nvim.nix"
+    ];
   };
 
   treeSitterParserNames = [
@@ -37,8 +42,9 @@ in
     vimAlias = true;
     withNodeJs = true;
     withPython3 = true;
+    withRuby = false;
 
-    extraLuaConfig = ''
+    initLua = ''
       vim.g.ark_nvim_managed_by_nix = true
       require("ark-nvim")
     '';

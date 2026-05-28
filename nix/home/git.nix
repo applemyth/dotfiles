@@ -3,16 +3,19 @@
 {
   programs.git = {
     enable = true;
-    userName = "applemyth";
-    userEmail = "116312778+applemyth@users.noreply.github.com";
-
-    aliases = {
-      nccommit = "commit -a --allow-empty-message -m \"\"";
-    };
 
     lfs.enable = true;
 
-    extraConfig = {
+    settings = {
+      user = {
+        name = "applemyth";
+        email = "116312778+applemyth@users.noreply.github.com";
+      };
+
+      alias = {
+        nccommit = "commit -a --allow-empty-message -m \"\"";
+      };
+
       init.defaultBranch = "main";
       pull.rebase = false;
       push.autoSetupRemote = true;

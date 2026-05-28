@@ -14,7 +14,10 @@
       gp = "git push";
     };
 
-    initExtra = ''
+    initContent = ''
+      [ -f "$HOME/.local/bin/env" ] && source "$HOME/.local/bin/env"
+      export PATH="$HOME/.local/bin:$PATH"
+
       PROMPT='%n %1~ %# '
 
       bindkey '^ ' autosuggest-accept
