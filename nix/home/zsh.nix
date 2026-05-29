@@ -4,7 +4,18 @@
   programs.zsh = {
     enable = true;
     autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;
+    syntaxHighlighting = {
+      enable = true;
+      styles = {
+        alias = "fg=12";
+        builtin = "fg=12";
+        command = "fg=12";
+        function = "fg=12";
+        hashed-command = "fg=12";
+        precommand = "fg=12";
+        unknown-token = "fg=8";
+      };
+    };
 
     shellAliases = {
       v = "nvim";
