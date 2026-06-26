@@ -1,4 +1,4 @@
-{ ... }:
+{ lib, pkgs, ... }:
 
 {
   programs.tmux = {
@@ -28,6 +28,7 @@
       set -g message-style bg=color233,fg=color208
       set -g message-command-style bg=color233,fg=color208
 
+    '' + lib.optionalString pkgs.stdenv.isDarwin ''
       bind-key -T copy-mode-vi Y send -X copy-pipe-and-cancel "pbcopy"
       bind-key -T copy-mode Y send -X copy-pipe-and-cancel "pbcopy"
     '';

@@ -89,12 +89,10 @@
           system = "aarch64-darwin";
         };
 
-        # Example Linux profile:
-        #
-        # linuxbox = {
-        #   username = "alex";
-        #   system = "x86_64-linux";
-        # };
+        archie = {
+          username = "hershiebar";
+          system = "x86_64-linux";
+        };
       };
 
       homeProfiles = lib.mapAttrs'

@@ -40,7 +40,6 @@ vim.keymap.set("n", "<leader>Gl", "<cmd>Git pull<cr>", { desc = "Fugitive: Pull"
 
 local cmp = require("cmp")
 local cmp_lsp = require("cmp_nvim_lsp")
-local lspconfig = require("lspconfig")
 
 local capabilities = vim.tbl_deep_extend(
   "force",
@@ -51,6 +50,10 @@ local capabilities = vim.tbl_deep_extend(
 
 require("fidget").setup({})
 
+vim.lsp.config("*", {
+  capabilities = capabilities,
+})
+
 for _, server in ipairs({
   "astro",
   "html",
@@ -60,14 +63,12 @@ for _, server in ipairs({
   "texlab",
   "vimls",
 }) do
-  lspconfig[server].setup({
-    capabilities = capabilities,
+  vim.lsp.config(server, {
     single_file_support = true,
   })
 end
 
-lspconfig.lua_ls.setup({
-  capabilities = capabilities,
+vim.lsp.config("lua_ls", {
   diagnostics = { disable = { "missing-fields", "incomplete-signature-doc" } },
   settings = {
     Lua = {
@@ -85,15 +86,26 @@ lspconfig.lua_ls.setup({
   },
 })
 
-lspconfig.denols.setup({
-  capabilities = capabilities,
-  root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
+vim.lsp.config("denols", {
+  root_markers = { "deno.json", "deno.jsonc" },
 })
 
-lspconfig.ts_ls.setup({
-  capabilities = capabilities,
-  root_dir = lspconfig.util.root_pattern("package.json"),
+vim.lsp.config("ts_ls", {
+  root_markers = { "package.json" },
   single_file_support = false,
+})
+
+vim.lsp.enable({
+  "astro",
+  "html",
+  "intelephense",
+  "pyright",
+  "tailwindcss",
+  "texlab",
+  "vimls",
+  "lua_ls",
+  "denols",
+  "ts_ls",
 })
 
 cmp.setup({
@@ -161,20 +173,11 @@ vim.keymap.set("n", "<leader>rw", function()
   require("spectre").open_visual({ select_word = true })
 end, { desc = "Spectre: Replace current word" })
 
-require("nvim-treesitter.configs").setup({
-  ensure_installed = {},
-  sync_install = false,
-  auto_install = false,
-  indent = {
-    enable = true,
-  },
-  highlight = {
-    enable = true,
-    additional_vim_regex_highlighting = false,
-  },
-  update_focused_file = {
-    enable = true,
-  },
+vim.api.nvim_create_autocmd("FileType", {
+  group = vim.api.nvim_create_augroup("ArkTreesitterStart", { clear = true }),
+  callback = function(args)
+    pcall(vim.treesitter.start, args.buf)
+  end,
 })
 
 require("zen-mode").setup({
